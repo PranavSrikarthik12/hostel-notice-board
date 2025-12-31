@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin - Hostel Notice Board</title>
+</head>
+<body>
+    <h2>Add Notice</h2>
+
+    <input type="text" id="title" placeholder="Title"><br><br>
+    <textarea id="message" placeholder="Message"></textarea><br><br>
+    <input type="date" id="date"><br><br>
+    <input type="datetime-local" id="expires_at"><br><br>
+
+    <button onclick="addNotice()">Add Notice</button>
+
+    <p id="status"></p>
+
+    <script>
+        const BASE_URL = "https://YOUR-RENDER-URL.onrender.com";
+
+        function addNotice() {
+            const data = {
+                title: document.getElementById("title").value,
+                message: document.getElementById("message").value,
+                date: document.getElementById("date").value,
+                expires_at: document.getElementById("expires_at").value
+            };
+
+            fetch(`${BASE_URL}/notices`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data)
+            })
+            .then(res => res.json())
+            .then(response => {
+                document.getElementById("status").innerText = response.message;
+            })
+            .catch(err => {
+                document.getElementById("status").innerText = "Error adding notice";
+            });
+        }
+    </script>
+</body>
+</html>

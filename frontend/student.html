@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Student - Hostel Notices</title>
+</head>
+<body>
+    <h2>Active Notices</h2>
+    <button onclick="loadNotices()">Refresh</button>
+    <ul id="noticeList"></ul>
+
+    <script>
+        const BASE_URL = "https://hostel-notice-board.onrender.com/";
+
+        function loadNotices() {
+            fetch(`${BASE_URL}/notices`)
+                .then(res => res.json())
+                .then(data => {
+                    const list = document.getElementById("noticeList");
+                    list.innerHTML = "";
+
+                    data.forEach(n => {
+                        const li = document.createElement("li");
+                        li.innerHTML = `<b>${n.title}</b><br>${n.message}<br><i>${n.date}</i><hr>`;
+                        list.appendChild(li);
+                    });
+                });
+        }
+
+        loadNotices();
+    </script>
+</body>
+</html>
