@@ -2,38 +2,29 @@ from flask import Flask, request, jsonify
 from datetime import datetime
 import os
 
-
-
 app = Flask(__name__)
 
-# -------------------------
-# In-memory notice storage
-# -------------------------
-notices = []  # Ephemeral state (cleared on restart)
+# In-memory notice storage (ephemeral)
+notices = []
 
 
-# -------------------------
-# Utility: Remove expired notices
-# -------------------------
+# Utility: Remove expired notices (TTL cleanup)
 def cleanup_expired_notices():
-    current_time = datetime.now()
     global notices
-
+    now = datetime.now()
     notices = [
-        notice for notice in notices
-        if datetime.fromisoformat(notice["expires_at"]) > current_time
+        n for n in notices
+        if datetime.fromisoformat(n["expires_at"]) > now
     ]
 
 
-# -------------------------
-# API: Add a new notice (Admin)
-# -------------------------
+# API: Add notice (Admin)
 @app.route("/notices", methods=["POST"])
 def add_notice():
     data = request.get_json()
 
     required_fields = ["title", "message", "date", "expires_at"]
-    if not all(field in data for field in required_fields):
+    if not data or not all(field in data for field in required_fields):
         return jsonify({"error": "Missing required fields"}), 400
 
     notice = {
@@ -51,20 +42,14 @@ def add_notice():
     }), 201
 
 
-# -------------------------
 # API: Get active notices (Students)
-# -------------------------
 @app.route("/notices", methods=["GET"])
 def get_notices():
     cleanup_expired_notices()
     return jsonify(notices), 200
 
 
-# -------------------------
-# Run server
-# -------------------------
+# Run app (Render-compatible)
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
-# To run the server, use the command: python backend/app.py
-# Ensure Flask is installed: pip install Flask

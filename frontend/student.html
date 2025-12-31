@@ -4,12 +4,13 @@
     <title>Student - Hostel Notices</title>
 </head>
 <body>
-    <h2>Active Notices</h2>
-    <button onclick="loadNotices()">Refresh</button>
+    <h2>Active Hostel Notices</h2>
+
+    <button onclick="loadNotices()">Refresh Notices</button>
     <ul id="noticeList"></ul>
 
     <script>
-        const BASE_URL = "https://hostel-notice-board.onrender.com/";
+        const BASE_URL = "https://hostel-notice-board.onrender.com";
 
         function loadNotices() {
             fetch(`${BASE_URL}/notices`)
@@ -18,11 +19,25 @@
                     const list = document.getElementById("noticeList");
                     list.innerHTML = "";
 
+                    if (data.length === 0) {
+                        list.innerHTML = "<li>No active notices</li>";
+                        return;
+                    }
+
                     data.forEach(n => {
                         const li = document.createElement("li");
-                        li.innerHTML = `<b>${n.title}</b><br>${n.message}<br><i>${n.date}</i><hr>`;
+                        li.innerHTML = `
+                            <b>${n.title}</b><br>
+                            ${n.message}<br>
+                            <i>Date: ${n.date}</i>
+                            <hr>
+                        `;
                         list.appendChild(li);
                     });
+                })
+                .catch(() => {
+                    document.getElementById("noticeList").innerHTML =
+                        "<li>Error loading notices</li>";
                 });
         }
 
