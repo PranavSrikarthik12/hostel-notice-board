@@ -16,6 +16,15 @@ def cleanup_expired_notices():
         n for n in notices
         if datetime.fromisoformat(n["expires_at"]) > now
     ]
+@app.route("/", methods=["GET"])
+def home():
+    return jsonify({
+        "message": "Hostel Notice Board API is running",
+        "endpoints": {
+            "GET /notices": "View active notices",
+            "POST /notices": "Add a new notice"
+        }
+    })
 
 
 # API: Add notice (Admin)
