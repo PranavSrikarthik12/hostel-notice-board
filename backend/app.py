@@ -4,64 +4,76 @@ from datetime import datetime
 import os
 
 app = Flask(__name__)
-CORS(app)  # ENABLE CORS
+CORS(app)
 
-
-# In-memory notice storage (ephemeral)
+# In-memory notice storage
 notices = []
 
 
-# Utility: Remove expired notices (TTL cleanup)
-def cleanup_expired_notices():
-    global notices
-    now = datetime.now()
-    notices = [
-        n for n in notices
-        if datetime.fromisoformat(n["expires_at"]) > now
-    ]
 @app.route("/", methods=["GET"])
 def home():
     return jsonify({
-        "message": "Hostel Notice Board API is running",
-        "endpoints": {
-            "GET /notices": "View active notices",
-            "POST /notices": "Add a new notice"
-        }
+        "message": "Hostel Notice Board API running",
+        "endpoints": ["/notices"]
     })
 
 
-# API: Add notice (Admin)
+def cleanup_expired_notices():
+    global notices
+    now = datetime.now()
+    valid_notices = []
+
+    for n in notices:
+        try:
+            expiry = datetime.fromisoformat(n["expires_at"])
+            if expiry > now:
+                valid_notices.append(n)
+        except Exception:
+            # If parsing fails, drop the notice
+            pass
+
+    notices = valid_notices
+
+
 @app.route("/notices", methods=["POST"])
 def add_notice():
     data = request.get_json()
 
-    required_fields = ["title", "message", "date", "expires_at"]
-    if not data or not all(field in data for field in required_fields):
-        return jsonify({"error": "Missing required fields"}), 400
+    if not data:
+        return jsonify({"error": "Invalid JSON payload"}), 400
+
+    title = data.get("title", "").strip()
+    message = data.get("message", "").strip()
+    date = data.get("date", "").strip()
+    expires_at = data.get("expires_at", "").strip()
+
+    if not all([title, message, date, expires_at]):
+        return jsonify({"error": "All fields are required"}), 400
+
+    try:
+        # Validate expiry format
+        datetime.fromisoformat(expires_at)
+    except Exception:
+        return jsonify({"error": "Invalid expiry datetime format"}), 400
 
     notice = {
-        "title": data["title"],
-        "message": data["message"],
-        "date": data["date"],
-        "expires_at": data["expires_at"]
+        "title": title,
+        "message": message,
+        "date": date,
+        "expires_at": expires_at
     }
 
     notices.append(notice)
 
-    return jsonify({
-        "status": "success",
-        "message": "Notice added successfully"
-    }), 201
+    return jsonify({"message": "Notice added successfully"}), 201
 
 
-# API: Get active notices (Students)
 @app.route("/notices", methods=["GET"])
 def get_notices():
     cleanup_expired_notices()
     return jsonify(notices), 200
 
 
-# Run app (Render-compatible)
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
