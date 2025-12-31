@@ -1,49 +1,113 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Admin - Hostel Notice Board</title>
+    <title>Admin | Hostel Notice Board</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            display: flex;
+            justify-content: center;
+            padding-top: 40px;
+        }
+        .container {
+            background: white;
+            padding: 25px;
+            width: 400px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        input, textarea, button {
+            width: 100%;
+            margin-bottom: 12px;
+            padding: 10px;
+            font-size: 14px;
+        }
+        textarea {
+            resize: none;
+            height: 80px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .status {
+            text-align: center;
+            font-weight: bold;
+        }
+        .success {
+            color: green;
+        }
+        .error {
+            color: red;
+        }
+    </style>
 </head>
+
 <body>
+<div class="container">
     <h2>Add Hostel Notice</h2>
 
-    <input type="text" id="title" placeholder="Title"><br><br>
-    <textarea id="message" placeholder="Message"></textarea><br><br>
-    <label>Date:</label><br>
-    <input type="date" id="date"><br><br>
+    <input id="title" placeholder="Notice Title">
+    <textarea id="message" placeholder="Notice Message"></textarea>
 
-    <label>Expiry Date & Time:</label><br>
-    <input type="datetime-local" id="expires_at"><br><br>
+    <label>Date</label>
+    <input type="date" id="date">
 
-    <button onclick="addNotice()">Add Notice</button>
+    <label>Expiry Date & Time</label>
+    <input type="datetime-local" id="expires_at">
 
-    <p id="status"></p>
+    <button onclick="addNotice()">Publish Notice</button>
 
-    <script>
-        const BASE_URL = "https://YOUR_RENDER_URL";
+    <p id="status" class="status"></p>
+</div>
 
-        function addNotice() {
-            const data = {
-                title: document.getElementById("title").value,
-                message: document.getElementById("message").value,
-                date: document.getElementById("date").value,
-                expires_at: document.getElementById("expires_at").value
-            };
+<script>
+    const BASE_URL = "https://hostel-notice-board.onrender.com";
 
-            fetch(`${BASE_URL}/notices`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(data)
-            })
-            .then(res => res.json())
-            .then(response => {
-                document.getElementById("status").innerText = response.message;
-            })
-            .catch(() => {
-                document.getElementById("status").innerText = "Error adding notice";
-            });
+    function addNotice() {
+        const status = document.getElementById("status");
+        status.innerText = "";
+
+        const data = {
+            title: title.value.trim(),
+            message: message.value.trim(),
+            date: date.value,
+            expires_at: expires_at.value
+        };
+
+        if (!data.title || !data.message || !data.date || !data.expires_at) {
+            status.innerText = "All fields are required";
+            status.className = "status error";
+            return;
         }
-    </script>
+
+        fetch(`${BASE_URL}/notices`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data)
+        })
+        .then(async res => {
+            const result = await res.json();
+            if (!res.ok) throw result;
+            status.innerText = result.message;
+            status.className = "status success";
+        })
+        .catch(err => {
+            status.innerText = err.error || "Failed to add notice";
+            status.className = "status error";
+        });
+    }
+</script>
 </body>
 </html>

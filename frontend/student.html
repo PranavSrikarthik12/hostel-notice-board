@@ -1,47 +1,141 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Student - Hostel Notices</title>
+    <title>Student | Hostel Notices</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #eef1f4;
+            padding: 30px;
+        }
+        h2 {
+            text-align: center;
+        }
+        .controls {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        input {
+            padding: 8px;
+            width: 250px;
+            margin-right: 10px;
+        }
+        button {
+            padding: 8px 15px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #1e7e34;
+        }
+        .notice {
+            background: white;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 6px solid #007bff;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+        .expiring-soon {
+            border-left-color: #dc3545; /* red */
+        }
+        .notice h3 {
+            margin: 0 0 5px 0;
+        }
+        .notice small {
+            color: #555;
+        }
+        .hint {
+            text-align: center;
+            font-size: 13px;
+            color: #666;
+            margin-top: 10px;
+        }
+    </style>
 </head>
+
 <body>
-    <h2>Active Hostel Notices</h2>
 
-    <button onclick="loadNotices()">Refresh Notices</button>
-    <ul id="noticeList"></ul>
+<h2>Active Hostel Notices</h2>
 
-    <script>
-        const BASE_URL = "https://hostel-notice-board.onrender.com";
+<div class="controls">
+    <input type="text" id="search" placeholder="Search notices..." onkeyup="renderNotices()">
+    <button onclick="loadNotices()">Refresh</button>
+</div>
 
-        function loadNotices() {
-            fetch(`${BASE_URL}/notices`)
-                .then(res => res.json())
-                .then(data => {
-                    const list = document.getElementById("noticeList");
-                    list.innerHTML = "";
+<div id="noticeList"></div>
 
-                    if (data.length === 0) {
-                        list.innerHTML = "<li>No active notices</li>";
-                        return;
-                    }
+<p class="hint">
+    🔴 Red border indicates notices expiring within 24 hours  
+    <br>🔄 Auto-refresh every 30 seconds
+</p>
 
-                    data.forEach(n => {
-                        const li = document.createElement("li");
-                        li.innerHTML = `
-                            <b>${n.title}</b><br>
-                            ${n.message}<br>
-                            <i>Date: ${n.date}</i>
-                            <hr>
-                        `;
-                        list.appendChild(li);
-                    });
-                })
-                .catch(() => {
-                    document.getElementById("noticeList").innerHTML =
-                        "<li>Error loading notices</li>";
-                });
+<script>
+    const BASE_URL = "https://hostel-notice-board.onrender.com";
+    let notices = [];
+
+    function isExpiringSoon(expiresAt) {
+        const now = new Date();
+        const expiry = new Date(expiresAt);
+        const diffHours = (expiry - now) / (1000 * 60 * 60);
+        return diffHours <= 24;
+    }
+
+    function loadNotices() {
+        fetch(`${BASE_URL}/notices`)
+            .then(res => res.json())
+            .then(data => {
+                notices = data;
+                renderNotices();
+            })
+            .catch(() => {
+                document.getElementById("noticeList").innerHTML =
+                    "<p>Error loading notices</p>";
+            });
+    }
+
+    function renderNotices() {
+        const list = document.getElementById("noticeList");
+        const keyword = document.getElementById("search").value.toLowerCase();
+        list.innerHTML = "";
+
+        const filtered = notices.filter(n =>
+            n.title.toLowerCase().includes(keyword) ||
+            n.message.toLowerCase().includes(keyword)
+        );
+
+        if (filtered.length === 0) {
+            list.innerHTML = "<p style='text-align:center;'>No matching notices</p>";
+            return;
         }
 
-        loadNotices();
-    </script>
+        filtered.forEach(n => {
+            const div = document.createElement("div");
+            div.className = "notice";
+
+            if (isExpiringSoon(n.expires_at)) {
+                div.classList.add("expiring-soon");
+            }
+
+            div.innerHTML = `
+                <h3>${n.title}</h3>
+                <p>${n.message}</p>
+                <small>
+                    Posted on: ${n.date}<br>
+                    Expires at: ${new Date(n.expires_at).toLocaleString()}
+                </small>
+            `;
+            list.appendChild(div);
+        });
+    }
+
+    // Auto-refresh every 30 seconds
+    setInterval(loadNotices, 30000);
+
+    loadNotices();
+</script>
+
 </body>
 </html>
