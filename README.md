@@ -165,6 +165,19 @@ GET /notices
 
 ---
 
+<img width="683" height="705" alt="image" src="https://github.com/user-attachments/assets/8955a588-b51f-4180-8b4a-994ea79b47e0" />
+
+### Architecture Explanation
+
+The system follows a **client–server architecture** where both Admin and Student users interact through web-based clients.
+
+All communication happens via **stateless REST APIs** hosted on a cloud-deployed backend.  
+The backend maintains an **in-memory TTL-based notice store**, ensuring fast access and automatic expiry of outdated notices.
+
+This design reflects real-world distributed systems that rely on ephemeral state, pull-based communication, and scalable stateless services.
+
+---
+
 ##  Steps to Run the Application
 
 ### 1. Backend (Local)
@@ -204,9 +217,8 @@ This project successfully demonstrates a **distributed, stateless web applicatio
 
 ---
 
-## Team Contribution
 
-Each module was designed and implemented with a focus on:
-- Distributed systems concepts
-- Clean architecture
-- Practical usability
+
+  
+
+
