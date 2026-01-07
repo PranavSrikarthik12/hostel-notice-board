@@ -3,73 +3,315 @@
 <head>
     <title>Admin | Hostel Notice Board</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: Arial, sans-serif;
-            background: #f4f6f8;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding-top: 80px;
+        }
+
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px 0;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+        .nav-content {
+            max-width: 1200px;
+            margin: 0 auto;
             display: flex;
-            justify-content: center;
-            padding-top: 40px;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 30px;
         }
-        .container {
-            background: white;
-            padding: 25px;
-            width: 400px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 22px;
+            font-weight: 700;
+            color: #2d3748;
+            text-decoration: none;
         }
-        h2 {
-            text-align: center;
-            margin-bottom: 20px;
+
+        .nav-brand .logo {
+            font-size: 28px;
         }
-        input, textarea, button {
-            width: 100%;
-            margin-bottom: 12px;
-            padding: 10px;
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: #4a5568;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+            font-size: 15px;
+        }
+
+        .nav-links a:hover {
+            color: #667eea;
+        }
+
+        .nav-links a.active {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #4a5568;
             font-size: 14px;
         }
-        textarea {
-            resize: none;
-            height: 80px;
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
         }
+
+        .main-content {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 20px;
+            min-height: calc(100vh - 80px);
+        }
+
+        .container {
+            background: white;
+            padding: 40px;
+            width: 100%;
+            max-width: 480px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #2d3748;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #4a5568;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 12px 16px;
+            font-size: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        input[type="date"],
+        input[type="datetime-local"] {
+            cursor: pointer;
+        }
+
         button {
-            background: #007bff;
+            width: 100%;
+            padding: 14px;
+            font-size: 16px;
+            font-weight: 600;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border: none;
             cursor: pointer;
-            border-radius: 4px;
+            border-radius: 10px;
+            margin-top: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
         }
+
         button:hover {
-            background: #0056b3;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
         }
+
+        button:active {
+            transform: translateY(0);
+        }
+
         .status {
             text-align: center;
-            font-weight: bold;
+            font-weight: 600;
+            margin-top: 20px;
+            padding: 12px;
+            border-radius: 8px;
+            display: none;
+            animation: fadeIn 0.3s ease;
         }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .status.show {
+            display: block;
+        }
+
         .success {
-            color: green;
+            color: #22543d;
+            background: #c6f6d5;
+            border: 1px solid #9ae6b4;
         }
+
         .error {
-            color: red;
+            color: #742a2a;
+            background: #fed7d7;
+            border: 1px solid #fc8181;
+        }
+
+        .icon {
+            display: inline-block;
+            margin-right: 6px;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 30px 20px;
+            }
+
+            h2 {
+                font-size: 24px;
+            }
+
+            .nav-content {
+                padding: 0 15px;
+            }
+
+            .nav-brand {
+                font-size: 18px;
+            }
+
+            .nav-brand .logo {
+                font-size: 24px;
+            }
+
+            .nav-links {
+                gap: 15px;
+            }
+
+            .nav-links a {
+                font-size: 14px;
+            }
+
+            .user-info span {
+                display: none;
+            }
         }
     </style>
 </head>
 
 <body>
+<nav class="navbar">
+    <div class="nav-content">
+        <a href="#" class="nav-brand">
+            <span class="logo">🏢</span>
+            <span>Hostel Notice Board</span>
+        </a>
+        <div class="nav-links">
+            <a href="#" class="active">Dashboard</a>
+            <a href="/home/pranav/hostel-notice-board/frontend/student.html">View Notices</a>
+            <a href="#">Settings</a>
+        </div>
+        <div class="user-info">
+            <span>Admin</span>
+            <div class="user-avatar">A</div>
+        </div>
+    </div>
+</nav>
+
+<div class="main-content">
 <div class="container">
-    <h2>Add Hostel Notice</h2>
+    <h2>📢 Add Hostel Notice</h2>
 
-    <input id="title" placeholder="Notice Title">
-    <textarea id="message" placeholder="Notice Message"></textarea>
+    <div class="form-group">
+        <label for="title">Notice Title</label>
+        <input id="title" type="text" placeholder="Enter notice title">
+    </div>
 
-    <label>Date</label>
-    <input type="date" id="date">
+    <div class="form-group">
+        <label for="message">Notice Message</label>
+        <textarea id="message" placeholder="Enter notice details..."></textarea>
+    </div>
 
-    <label>Expiry Date & Time</label>
-    <input type="datetime-local" id="expires_at">
+    <div class="form-group">
+        <label for="date">Date</label>
+        <input type="date" id="date">
+    </div>
+
+    <div class="form-group">
+        <label for="expires_at">Expiry Date & Time</label>
+        <input type="datetime-local" id="expires_at">
+    </div>
 
     <button onclick="addNotice()">Publish Notice</button>
 
     <p id="status" class="status"></p>
+</div>
 </div>
 
 <script>
@@ -77,6 +319,7 @@
 
     function addNotice() {
         const status = document.getElementById("status");
+        status.classList.remove("show");
         status.innerText = "";
 
         const data = {
@@ -87,8 +330,8 @@
         };
 
         if (!data.title || !data.message || !data.date || !data.expires_at) {
-            status.innerText = "All fields are required";
-            status.className = "status error";
+            status.innerHTML = '<span class="icon">⚠️</span> All fields are required';
+            status.className = "status error show";
             return;
         }
 
@@ -100,12 +343,20 @@
         .then(async res => {
             const result = await res.json();
             if (!res.ok) throw result;
-            status.innerText = result.message;
-            status.className = "status success";
+            status.innerHTML = '<span class="icon">✓</span> ' + result.message;
+            status.className = "status success show";
+            
+            // Clear form on success
+            setTimeout(() => {
+                title.value = '';
+                message.value = '';
+                date.value = '';
+                expires_at.value = '';
+            }, 1500);
         })
         .catch(err => {
-            status.innerText = err.error || "Failed to add notice";
-            status.className = "status error";
+            status.innerHTML = '<span class="icon">✗</span> ' + (err.error || "Failed to add notice");
+            status.className = "status error show";
         });
     }
 </script>
