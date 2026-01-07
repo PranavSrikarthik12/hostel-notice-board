@@ -112,23 +112,11 @@
             animation: slideIn 0.5s ease-out;
         }
 
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateY(-30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
         h2 {
             text-align: center;
             margin-bottom: 30px;
             color: #2d3748;
             font-size: 28px;
-            font-weight: 700;
         }
 
         .form-group {
@@ -138,7 +126,6 @@
         label {
             display: block;
             margin-bottom: 8px;
-            color: #4a5568;
             font-weight: 600;
             font-size: 14px;
         }
@@ -149,24 +136,11 @@
             font-size: 15px;
             border: 2px solid #e2e8f0;
             border-radius: 10px;
-            transition: all 0.3s ease;
-            font-family: inherit;
-        }
-
-        input:focus, textarea:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
         }
 
         textarea {
             resize: vertical;
             min-height: 100px;
-        }
-
-        input[type="date"],
-        input[type="datetime-local"] {
-            cursor: pointer;
         }
 
         button {
@@ -180,17 +154,6 @@
             cursor: pointer;
             border-radius: 10px;
             margin-top: 10px;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-        }
-
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
-        }
-
-        button:active {
-            transform: translateY(0);
         }
 
         .status {
@@ -200,12 +163,6 @@
             padding: 12px;
             border-radius: 8px;
             display: none;
-            animation: fadeIn 0.3s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
         }
 
         .status.show {
@@ -213,59 +170,19 @@
         }
 
         .success {
-            color: #22543d;
             background: #c6f6d5;
-            border: 1px solid #9ae6b4;
+            color: #22543d;
         }
 
         .error {
-            color: #742a2a;
             background: #fed7d7;
-            border: 1px solid #fc8181;
-        }
-
-        .icon {
-            display: inline-block;
-            margin-right: 6px;
-        }
-
-        @media (max-width: 600px) {
-            .container {
-                padding: 30px 20px;
-            }
-
-            h2 {
-                font-size: 24px;
-            }
-
-            .nav-content {
-                padding: 0 15px;
-            }
-
-            .nav-brand {
-                font-size: 18px;
-            }
-
-            .nav-brand .logo {
-                font-size: 24px;
-            }
-
-            .nav-links {
-                gap: 15px;
-            }
-
-            .nav-links a {
-                font-size: 14px;
-            }
-
-            .user-info span {
-                display: none;
-            }
+            color: #742a2a;
         }
     </style>
 </head>
 
 <body>
+
 <nav class="navbar">
     <div class="nav-content">
         <a href="#" class="nav-brand">
@@ -289,76 +206,94 @@
     <h2>📢 Add Hostel Notice</h2>
 
     <div class="form-group">
-        <label for="title">Notice Title</label>
-        <input id="title" type="text" placeholder="Enter notice title">
+        <label>Notice Title</label>
+        <input id="title">
     </div>
 
     <div class="form-group">
-        <label for="message">Notice Message</label>
-        <textarea id="message" placeholder="Enter notice details..."></textarea>
+        <label>Notice Message</label>
+        <textarea id="message"></textarea>
     </div>
 
     <div class="form-group">
-        <label for="date">Date</label>
+        <label>Date</label>
         <input type="date" id="date">
     </div>
 
     <div class="form-group">
-        <label for="expires_at">Expiry Date & Time</label>
+        <label>Expiry Date & Time</label>
         <input type="datetime-local" id="expires_at">
     </div>
 
     <button onclick="addNotice()">Publish Notice</button>
-
     <p id="status" class="status"></p>
 </div>
 </div>
 
 <script>
-    const BASE_URL = "https://hostel-notice-board.onrender.com";
+const BASE_URL = "https://hostel-notice-board.onrender.com";
 
-    function addNotice() {
-        const status = document.getElementById("status");
-        status.classList.remove("show");
-        status.innerText = "";
+/* Exponential backoff retry logic */
+async function fetchWithRetry(url, options, maxRetries = 3) {
+    for (let i = 0; i < maxRetries; i++) {
+        try {
+            return await fetch(url, options);
+        } catch (err) {
+            if (i === maxRetries - 1) throw err;
+            const delay = Math.pow(2, i) * 1000;
+            await new Promise(res => setTimeout(res, delay));
+        }
+    }
+}
 
-        const data = {
-            title: title.value.trim(),
-            message: message.value.trim(),
-            date: date.value,
-            expires_at: expires_at.value
-        };
+async function addNotice() {
+    const status = document.getElementById("status");
+    status.className = "status";
 
-        if (!data.title || !data.message || !data.date || !data.expires_at) {
-            status.innerHTML = '<span class="icon">⚠️</span> All fields are required';
+    const data = {
+        title: title.value.trim(),
+        message: message.value.trim(),
+        date: date.value,
+        expires_at: expires_at.value
+    };
+
+    if (Object.values(data).some(v => !v)) {
+        status.textContent = "⚠️ All fields are required";
+        status.className = "status error show";
+        return;
+    }
+
+    try {
+        const res = await fetchWithRetry(`${BASE_URL}/notices`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data)
+        });
+
+        console.log("Request ID:", res.headers.get("X-Request-ID"));
+
+        if (res.status === 429) {
+            status.textContent = "⏳ Too many requests. Please wait.";
             status.className = "status error show";
             return;
         }
 
-        fetch(`${BASE_URL}/notices`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(data)
-        })
-        .then(async res => {
-            const result = await res.json();
-            if (!res.ok) throw result;
-            status.innerHTML = '<span class="icon">✓</span> ' + result.message;
-            status.className = "status success show";
-            
-            // Clear form on success
-            setTimeout(() => {
-                title.value = '';
-                message.value = '';
-                date.value = '';
-                expires_at.value = '';
-            }, 1500);
-        })
-        .catch(err => {
-            status.innerHTML = '<span class="icon">✗</span> ' + (err.error || "Failed to add notice");
-            status.className = "status error show";
-        });
+        const result = await res.json();
+        if (!res.ok) throw result;
+
+        status.textContent = "✅ " + result.message;
+        status.className = "status success show";
+
+        setTimeout(() => {
+            title.value = message.value = date.value = expires_at.value = "";
+        }, 1500);
+
+    } catch (err) {
+        status.textContent = "❌ " + (err.error || "Network error");
+        status.className = "status error show";
     }
+}
 </script>
+
 </body>
 </html>
